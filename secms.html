@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SECMS Enterprise | Smart Dashboard</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Boxicons -->
+    <link href='assets/css/boxicons.min.css' rel='stylesheet'>
+    
+    <!-- Chart.js for graphs -->
+    <script src="assets/js/chart.min.js"></script>
+
+    <!-- Dedicated Stylesheet -->
+    <link rel="stylesheet" href="secms-dashboard.css">
+</head>
+<body class="dark-theme">
+
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar glass-panel">
+            <div class="brand">
+                <i class='bx bxs-bolt-circle brand-icon'></i>
+                <div>
+                    <h2>SECMS</h2>
+                    <span class="brand-sub">Enterprise</span>
+                </div>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item active" data-view="dashboard">
+                    <i class='bx bx-grid-alt'></i>
+                    <span>Live Dashboard</span>
+                </li>
+                <li class="nav-item" data-view="calculator">
+                    <i class='bx bx-calculator'></i>
+                    <span>Tariff Calculator</span>
+                </li>
+                <li class="nav-item" data-view="analytics">
+                    <i class='bx bx-line-chart'></i>
+                    <span>Analytics</span>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <a href="index.html" class="back-link">
+                    <i class='bx bx-arrow-back'></i>
+                    <span>Back to Portfolio</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="page-title">
+                    <h1 id="current-page-title">Live Dashboard</h1>
+                    <p id="current-date-time" class="text-muted"></p>
+                </div>
+                
+                <div class="topbar-actions">
+                    <div class="alert-dropdown">
+                        <button class="icon-btn" id="notifications-btn">
+                            <i class='bx bx-bell'></i>
+                            <span class="badge" id="alert-badge">2</span>
+                        </button>
+                        <div class="dropdown-content glass-panel" id="notifications-panel">
+                            <div class="dropdown-header">Smart Alerts</div>
+                            <ul id="alerts-list">
+                                <!-- Alerts injected via JS -->
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="user-profile">
+                        <div class="avatar"><i class='bx bx-user'></i></div>
+                        <span class="user-name">Kavirajan K.</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard View -->
+            <section id="view-dashboard" class="view-section active">
+                
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card glass-panel">
+                        <div class="kpi-icon"><i class='bx bx-plug'></i></div>
+                        <div class="kpi-info">
+                            <h3 class="kpi-title">Current Load</h3>
+                            <div class="kpi-value"><span id="total-watts">0</span> <span class="unit">W</span></div>
+                            <div class="kpi-trend text-success"><i class='bx bx-trending-down'></i> -2.4% vs avg</div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card glass-panel neon-border">
+                        <div class="kpi-icon highlight"><i class='bx bx-rupee'></i></div>
+                        <div class="kpi-info">
+                            <h3 class="kpi-title">Est. Monthly Bill</h3>
+                            <div class="kpi-value highlight">₹<span id="est-bill">0.00</span></div>
+                            <div class="kpi-trend text-warning"><i class='bx bx-info-circle'></i> Slab: <span id="current-slab">0-200 Units</span></div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card glass-panel">
+                        <div class="kpi-icon"><i class='bx bx-tachometer'></i></div>
+                        <div class="kpi-info">
+                            <h3 class="kpi-title">Total Consumption</h3>
+                            <div class="kpi-value"><span id="total-units">0.00</span> <span class="unit">kWh</span></div>
+                            <div class="kpi-trend text-danger"><i class='bx bx-trending-up'></i> +12 units today</div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card glass-panel">
+                        <div class="kpi-icon"><i class='bx bx-devices'></i></div>
+                        <div class="kpi-info">
+                            <h3 class="kpi-title">Active Devices</h3>
+                            <div class="kpi-value"><span id="active-devices-count">0</span> / 10</div>
+                            <div class="kpi-trend text-success">System Nominal</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Grid -->
+                <div class="dashboard-grid">
+                    
+                    <!-- Real-time Chart -->
+                    <div class="chart-container glass-panel">
+                        <div class="panel-header">
+                            <h2>Live Power Demand</h2>
+                            <div class="status-indicator"><span class="dot pulse"></span> Live</div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="livePowerChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Environment & Footprint -->
+                    <div class="stats-container glass-panel">
+                        <div class="panel-header">
+                            <h2>Eco Impact</h2>
+                        </div>
+                        <div class="eco-stats">
+                            <div class="eco-item">
+                                <i class='bx bx-leaf text-success'></i>
+                                <div>
+                                    <h4>Carbon Footprint</h4>
+                                    <p><span id="carbon-val">12.5</span> kg CO₂</p>
+                                </div>
+                            </div>
+                            <div class="eco-item">
+                                <i class='bx bx-bulb text-warning'></i>
+                                <div>
+                                    <h4>Efficiency Score</h4>
+                                    <p>87 / 100 <span class="text-success">(Good)</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Devices List -->
+                    <div class="devices-container glass-panel">
+                        <div class="panel-header">
+                            <h2>Connected Appliances</h2>
+                            <button class="btn btn-sm btn-primary">Manage</button>
+                        </div>
+                        <div class="devices-list" id="devices-list">
+                            <!-- Devices injected via JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Calculator View -->
+            <section id="view-calculator" class="view-section">
+                <div class="calculator-grid">
+                    <div class="calc-panel glass-panel">
+                        <h2>Unit to Cost Calculator</h2>
+                        <p class="text-muted">Enter consumed units (kWh) to calculate electricity bill according to the latest TNEB tariff.</p>
+                        
+                        <div class="input-group">
+                            <label>Consumed Units (kWh)</label>
+                            <input type="number" id="calc-units" placeholder="e.g. 350" min="0">
+                        </div>
+                        <button class="btn btn-primary" id="btn-calc-cost">Calculate Bill</button>
+                        
+                        <div class="calc-result" id="cost-result-box" style="display: none;">
+                            <h3>Total Bill: <span class="highlight">₹<span id="calc-res-cost">0.00</span></span></h3>
+                            <div class="breakdown" id="calc-res-breakdown"></div>
+                        </div>
+                    </div>
+
+                    <div class="calc-panel glass-panel">
+                        <h2>Cost to Unit Estimator</h2>
+                        <p class="text-muted">Enter desired bill amount to estimate maximum allowed unit consumption.</p>
+                        
+                        <div class="input-group">
+                            <label>Bill Amount (₹)</label>
+                            <input type="number" id="calc-cost" placeholder="e.g. 1500" min="0">
+                        </div>
+                        <button class="btn btn-primary" id="btn-calc-units">Estimate Units</button>
+                        
+                        <div class="calc-result" id="units-result-box" style="display: none;">
+                            <h3>Est. Usage: <span class="highlight"><span id="calc-res-units">0</span> kWh</span></h3>
+                            <p class="text-muted mt-2">Maximum units you can consume to keep the bill under this amount.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tariff-table-container glass-panel mt-4">
+                    <h2>TNEB Tariff Structure (Reference)</h2>
+                    <div class="table-responsive mt-3">
+                        <table class="tariff-table">
+                            <thead>
+                                <tr>
+                                    <th>Consumption Range</th>
+                                    <th>1-200 Units</th>
+                                    <th>201-400 Units</th>
+                                    <th>401-500 Units</th>
+                                    <th>501-600 Units</th>
+                                    <th>601-800 Units</th>
+                                    <th>801-1000 Units</th>
+                                    <th>>1000 Units</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Up to 500 Units</strong></td>
+                                    <td>₹0.00</td>
+                                    <td>₹4.70</td>
+                                    <td>₹6.30</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Above 500 Units</strong></td>
+                                    <td>₹0.00 (up to 100)</td>
+                                    <td>₹4.70 (101-400)</td>
+                                    <td>₹6.30</td>
+                                    <td>₹8.40</td>
+                                    <td>₹9.45</td>
+                                    <td>₹10.50</td>
+                                    <td>₹11.55</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Analytics View (Placeholder) -->
+            <section id="view-analytics" class="view-section">
+                <div class="glass-panel text-center" style="padding: 4rem;">
+                    <i class='bx bx-bar-chart-alt-2' style="font-size: 4rem; color: var(--accent);"></i>
+                    <h2 class="mt-3">Advanced Analytics</h2>
+                    <p class="text-muted">Predictive models and historical trends will be available in the next update.</p>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Right AI Chatbot Panel -->
+        <aside class="ai-panel glass-panel">
+            <div class="chat-header">
+                <div class="ai-avatar pulse-glow"><i class='bx bx-bot'></i></div>
+                <div>
+                    <h3>Energy Assistant AI</h3>
+                    <span class="status-indicator"><span class="dot pulse"></span> Online</span>
+                </div>
+                <button class="icon-btn" id="close-chat-btn"><i class='bx bx-x'></i></button>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <div class="message ai">
+                    <div class="msg-bubble">
+                        Hello! I am your AI Energy Assistant. I monitor your appliances in real-time. How can I help you save energy today?
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-suggestions">
+                <button class="chip">Why is my bill high?</button>
+                <button class="chip">Highest consumer?</button>
+                <button class="chip">Energy saving tips</button>
+                <button class="chip">Current tariff?</button>
+            </div>
+            
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Ask AI...">
+                <button id="send-btn" class="btn-primary"><i class='bx bx-send'></i></button>
+            </div>
+        </aside>
+
+        <!-- Floating Chat Button (Mobile/Tablet) -->
+        <button class="floating-chat-btn" id="floating-chat-btn">
+            <i class='bx bx-bot'></i>
+        </button>
+
+    </div>
+
+    <!-- Application Logic -->
+    <script src="secms-app.js"></script>
+</body>
+</html>
