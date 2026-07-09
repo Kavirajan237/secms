@@ -194,51 +194,77 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTotalPower = 0;
     
     const devicesListEl = document.getElementById('devices-list');
+    const overviewDevicesListEl = document.getElementById('overview-devices-list');
     
     // Render Devices
     function renderDevices() {
-        if(!devicesListEl) return;
-        devicesListEl.innerHTML = '';
-        devices.forEach(dev => {
-            const el = document.createElement('div');
-            el.className = `device-card ${dev.status ? 'active' : ''}`;
-            el.id = `card-${dev.id}`;
-            
-            el.innerHTML = `
-                <div class="device-info">
-                    <div class="device-icon"><i class='bx ${dev.icon}'></i></div>
-                    <div>
-                        <div class="device-name">${dev.name}</div>
-                        <div class="device-status">${dev.status ? 'ON - Active' : 'OFF - Standby'}</div>
-                    </div>
-                </div>
-                <div class="device-stats">
-                    <div class="device-power" id="pwr-${dev.id}">${dev.status ? dev.minP : 0} W</div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-${dev.id}" ${dev.status ? 'checked' : ''}>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            `;
-            devicesListEl.appendChild(el);
-            
-            // Toggle listener
-            document.getElementById(`toggle-${dev.id}`).addEventListener('change', (e) => {
-                dev.status = e.target.checked;
-                const card = document.getElementById(`card-${dev.id}`);
-                const statusTxt = card.querySelector('.device-status');
-                const pwrTxt = document.getElementById(`pwr-${dev.id}`);
+        if(devicesListEl) devicesListEl.innerHTML = '';
+        if(overviewDevicesListEl) overviewDevicesListEl.innerHTML = '';
+        
+        devices.forEach((dev, index) => {
+            const createCard = (isOverview) => {
+                const el = document.createElement('div');
+                el.className = `device-card ${dev.status ? 'active' : ''}`;
+                el.id = isOverview ? `overview-card-${dev.id}` : `card-${dev.id}`;
                 
-                if(dev.status) {
-                    card.classList.add('active');
-                    statusTxt.textContent = 'ON - Active';
-                } else {
-                    card.classList.remove('active');
-                    statusTxt.textContent = 'OFF - Standby';
-                    pwrTxt.textContent = '0 W';
-                }
+                el.innerHTML = `
+                    <div class="device-info">
+                        <div class="device-icon"><i class='bx ${dev.icon}'></i></div>
+                        <div>
+                            <div class="device-name">${dev.name}</div>
+                            <div class="device-status" id="${isOverview ? 'overview-status-' : 'status-'}${dev.id}">${dev.status ? 'ON - Active' : 'OFF - Standby'}</div>
+                        </div>
+                    </div>
+                    <div class="device-stats">
+                        <div class="device-power" id="${isOverview ? 'overview-pwr-' : 'pwr-'}${dev.id}">${dev.status ? dev.minP : 0} W</div>
+                        <label class="switch">
+                            <input type="checkbox" id="${isOverview ? 'overview-toggle-' : 'toggle-'}${dev.id}" ${dev.status ? 'checked' : ''}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                `;
+                return el;
+            };
+
+            if (devicesListEl) {
+                const card = createCard(false);
+                devicesListEl.appendChild(card);
+            }
+            if (overviewDevicesListEl && index < 3) { // Only top 3 for overview
+                const overviewCard = createCard(true);
+                overviewDevicesListEl.appendChild(overviewCard);
+            }
+            
+            // Toggle listener sync
+            const handleToggle = (e) => {
+                dev.status = e.target.checked;
+                
+                ['', 'overview-'].forEach(prefix => {
+                    const c = document.getElementById(`${prefix}card-${dev.id}`);
+                    const s = document.getElementById(`${prefix}status-${dev.id}`);
+                    const p = document.getElementById(`${prefix}pwr-${dev.id}`);
+                    const t = document.getElementById(`${prefix}toggle-${dev.id}`);
+                    
+                    if(c && s && p && t) {
+                        t.checked = dev.status;
+                        if(dev.status) {
+                            c.classList.add('active');
+                            s.textContent = 'ON - Active';
+                        } else {
+                            c.classList.remove('active');
+                            s.textContent = 'OFF - Standby';
+                            p.textContent = '0 W';
+                        }
+                    }
+                });
                 updateTotalPower();
-            });
+            };
+
+            const toggleMain = document.getElementById(`toggle-${dev.id}`);
+            const toggleOverview = document.getElementById(`overview-toggle-${dev.id}`);
+            
+            if(toggleMain) toggleMain.addEventListener('change', handleToggle);
+            if(toggleOverview) toggleOverview.addEventListener('change', handleToggle);
         });
     }
 
@@ -354,6 +380,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Voice Command Mock
+    const voiceBtn = document.getElementById('voice-btn');
+    if (voiceBtn) {
+        voiceBtn.addEventListener('click', () => {
+            voiceBtn.classList.toggle('listening');
+            if (voiceBtn.classList.contains('listening')) {
+                if (chatInput) chatInput.placeholder = "Listening...";
+                setTimeout(() => {
+                    voiceBtn.classList.remove('listening');
+                    if (chatInput) {
+                        chatInput.value = "What is my highest consuming appliance?";
+                        chatInput.placeholder = "Ask AI...";
+                    }
+                    handleChat();
+                }, 2500);
+            } else {
+                if (chatInput) chatInput.placeholder = "Ask AI...";
+            }
+        });
+    }
+
 
     // --- 8. REAL-TIME CHART ---
     const ctx = document.getElementById('livePowerChart');
@@ -447,6 +494,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Smart Alerts check
         checkAlerts(currentTotalPower, activeCount);
+        
+        // Update Goal
+        const goalRemainingEl = document.getElementById('goal-remaining');
+        const goalProgressBar = document.getElementById('goal-progress-bar');
+        const goalProgressText = document.getElementById('goal-progress-text');
+        
+        let goal = 400; // Mock goal
+        let percentage = Math.min((totalUnitsConsumed / goal) * 100, 100);
+        if (goalProgressBar) goalProgressBar.style.width = percentage + '%';
+        if (goalProgressText) goalProgressText.textContent = percentage.toFixed(1) + '%';
+        if (goalRemainingEl) goalRemainingEl.textContent = Math.max(goal - totalUnitsConsumed, 0).toFixed(1);
+        
+        // Update individual device power labels
+        devices.forEach(dev => {
+            if(dev.status) {
+                const p = document.getElementById(`overview-pwr-${dev.id}`);
+                const pwrMain = document.getElementById(`pwr-${dev.id}`);
+                // value is already generated in the loop above
+                if (p && pwrMain) p.textContent = pwrMain.textContent;
+            }
+        });
     }
     
     // We start the simulation loop at the end of the script
@@ -459,5 +527,87 @@ document.addEventListener('DOMContentLoaded', () => {
     
     simulatePower();
     setInterval(simulatePower, 2000);
+
+    // --- 10. NEW CHARTS (Chart.js) ---
+    const initNewCharts = () => {
+        if (typeof Chart === 'undefined') return;
+        
+        Chart.defaults.color = '#a0aab2';
+        Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+
+        // Appliance Breakdown
+        const breakdownCtx = document.getElementById('applianceBreakdownChart');
+        if (breakdownCtx) {
+            new Chart(breakdownCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['AC', 'Water Heater', 'Fridge', 'Lights', 'Others'],
+                    datasets: [{
+                        data: [45, 25, 15, 10, 5],
+                        backgroundColor: ['#00d2ff', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { position: 'right' }
+                    },
+                    cutout: '75%'
+                }
+            });
+        }
+
+        // Trend Chart
+        const trendCtx = document.getElementById('trendChart');
+        if (trendCtx) {
+            new Chart(trendCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Consumption (kWh)',
+                        data: [12, 15, 14, 18, 16, 22, 20],
+                        backgroundColor: '#00d2ff',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    };
+    initNewCharts();
+
+    // --- 11. EXPORT MOCK ---
+    const setupExport = (btnId) => {
+        const btn = document.getElementById(btnId);
+        if(!btn) return;
+        const originalText = btn.textContent;
+        btn.addEventListener('click', () => {
+            btn.textContent = "Processing...";
+            btn.style.opacity = '0.7';
+            setTimeout(() => {
+                btn.textContent = "Exported Successfully!";
+                btn.style.opacity = '1';
+                btn.style.background = "var(--success)";
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = "";
+                }, 3000);
+            }, 1500);
+        });
+    };
+    setupExport('btn-export-pdf');
+    setupExport('btn-export-csv');
 
 });
